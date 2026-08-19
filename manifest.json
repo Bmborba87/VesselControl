@@ -1,9 +1,11 @@
 {
   "name": "Controle de Embarcações CBMRN",
   "short_name": "Embarcações",
+  "id": "./controle-embarcacoes-cbmrn",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f7fb",
-  "theme_color": "#0f172a"
+  "theme_color": "#0f172a",
+  "description": "Controle compartilhado da frota náutica do CBMRN."
 }
