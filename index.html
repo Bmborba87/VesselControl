@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0f172a">
 <title>Controle de Embarcações • CBMRN</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{--bg:#f4f7fb;--card:#fff;--text:#111827;--muted:#64748b;--border:#dbe3ef;--soft:#eef3f8;--primary:#0f766e;--danger:#b91c1c;--warning:#b45309;--success:#15803d;--blue:#1d4ed8}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:82px}
@@ -96,7 +97,7 @@ dialog{border:0;border-radius:14px;width:min(720px,94vw);background:var(--card);
  <div class="card"><h3>Usuário</h3><div id="userInfo" class="muted"></div><div class="actions" style="margin-top:8px"><button id="logoutBtn" class="secondary">Sair</button></div></div>
  <div class="card"><h3>Sincronização</h3><p class="muted">Os dados são compartilhados pela nuvem. Alterações feitas por outra guarnição aparecem automaticamente.</p><div class="actions"><button id="forceRefresh" class="secondary">Atualizar agora</button></div></div>
  <div class="card"><h3>Embarcações arquivadas</h3><p class="muted">Embarcações com histórico não são apagadas. Elas ficam arquivadas e podem ser restauradas.</p><div id="archivedVessels"></div></div>
- <div class="card"><h3>Histórico de alterações</h3><div id="auditList"></div></div>
+ <div class="card"><div class="sectionTitle"><div><h3>Histórico de alterações</h3><div class="muted">Registro das alterações realizadas no sistema.</div></div><button id="clearAuditBtn" class="danger">Limpar histórico</button></div><div id="auditList"></div></div>
 </section>
 </div>
 </main>
@@ -294,6 +295,13 @@ $("reservationForm").onsubmit=async e=>{e.preventDefault();let id=$("reservation
 
 $("calendarDate").value=localKey(new Date());$("calendarDate").onchange=renderCalendar;$("calendarVessel").onchange=renderCalendar;$("logFilter").onchange=renderLogs;$("logVesselFilter").onchange=renderLogs;
 $("forceRefresh").onclick=()=>loadAll().catch(e=>alert(e.message));
+$("clearAuditBtn").onclick=async()=>{
+ if(!A.length)return alert("O histórico já está vazio.");
+ if(!confirm("Excluir todo o histórico de alterações? Esta ação não poderá ser desfeita."))return;
+ let {error}=await supabase.from('audit_events').delete().gte('id',0);
+ if(error)return alert("Não foi possível limpar o histórico: "+error.message);
+ A=[];renderMore();alert("Histórico de alterações excluído.")
+};
 $("logoutBtn").onclick=()=>supabase.auth.signOut();
 $("themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("boatTheme",document.body.classList.contains("dark")?"dark":"light");$("themeBtn").textContent=document.body.classList.contains("dark")?"☀️":"🌙"};
 if(localStorage.getItem("boatTheme")==="dark"){document.body.classList.add("dark");$("themeBtn").textContent="☀️"}
