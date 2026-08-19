@@ -1,0 +1,17 @@
+CONTROLE DE EMBARCAÇÕES — V1
+
+Funcionalidades:
+- Cadastro de embarcações.
+- Status: disponível, em uso, manutenção ou indisponível.
+- Dashboard Hoje.
+- Agenda de disponibilidade por data.
+- Registros de uso, combustível, limpeza, manutenção, avaria e inspeção.
+- Combustível em litros e valor.
+- Horímetro.
+- Próxima revisão.
+- Responsável/guarnição.
+- Backup JSON.
+- IndexedDB.
+- PWA/offline.
+
+Esta é uma primeira versão para teste e refinamento do fluxo operacional.

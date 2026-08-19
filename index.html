@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Controle de Embarcações</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#111827;--muted:#64748b;--border:#dbe3ef;--soft:#eef3f8;--primary:#0f766e;--danger:#b91c1c;--warning:#b45309;--success:#15803d;--blue:#1d4ed8}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:82px}
+body.dark{--bg:#0b1220;--card:#111827;--text:#e5e7eb;--muted:#94a3b8;--border:#263244;--soft:#172033}
+header{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--border);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+header h1{font-size:1.05rem;margin:0}header small{color:var(--muted)}
+main{max-width:980px;margin:auto;padding:12px}.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px}.metric span{font-size:.7rem;color:var(--muted);display:block}.metric strong{font-size:1.25rem;display:block;margin-top:4px}
+h2,h3,h4{margin:0 0 8px}p{margin:4px 0}.muted{color:var(--muted);font-size:.78rem}
+button,input,select,textarea{font:inherit}button{border:0;border-radius:9px;padding:9px 11px;font-weight:700;cursor:pointer}.primary{background:var(--primary);color:white}.secondary{background:var(--soft);color:var(--text)}.danger{background:#fee2e2;color:var(--danger)}.warning{background:#ffedd5;color:var(--warning)}.success{background:#dcfce7;color:var(--success)}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{flex:0 0 auto}
+label{display:block;font-size:.72rem;color:var(--muted)}input,select,textarea{width:100%;margin-top:5px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:9px;padding:9px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}.row:last-child{border-bottom:0}
+.badge{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:.64rem;font-weight:800}.available{background:#dcfce7;color:#166534}.inuse{background:#dbeafe;color:#1e40af}.maintenance{background:#ffedd5;color:#9a3412}.unavailable{background:#fee2e2;color:#991b1b}
+.vessel{border:1px solid var(--border);border-radius:12px;margin-bottom:9px;overflow:hidden}.vessel summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:8px;align-items:center;padding:11px}.vessel summary::-webkit-details-marker{display:none}.vessel summary::after{content:"+";font-weight:900;color:var(--muted)}.vessel[open] summary::after{content:"−"}.vessel[open] summary{border-bottom:1px solid var(--border)}.vesselBody{padding:10px}
+.timeline{border-left:3px solid var(--border);padding-left:10px;margin:10px 0}.timelineItem{padding:6px 0}.timelineItem strong{display:block}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);z-index:30}.bottom button{background:none;color:var(--muted);padding:10px 4px 8px;border-radius:0;font-size:.68rem}.bottom button span{display:block;font-size:1.1rem}.bottom button.active{color:var(--primary)}
+dialog{border:0;border-radius:14px;width:min(720px,94vw);background:var(--card);color:var(--text);padding:0;box-shadow:0 20px 60px #0005}dialog::backdrop{background:#0008}.dhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:14px;border-bottom:1px solid var(--border)}.dbody{padding:14px}.dactions{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid var(--border)}
+.sectionTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.calendarDay{border:1px solid var(--border);border-radius:10px;padding:9px;margin-bottom:7px}.calendarDay .date{font-weight:800}.calendarList{display:grid;gap:5px;margin-top:7px}
+.empty{text-align:center;color:var(--muted);padding:18px}
+@media(max-width:720px){.grid3{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.actions button{flex:1}.row{align-items:flex-start}.metric strong{font-size:1.05rem}}
+@media(max-width:420px){main{padding:8px}.grid{grid-template-columns:1fr 1fr;gap:6px}.metric{padding:9px}.metric span{font-size:.62rem}.bottom button{font-size:.61rem}.vessel summary{padding:9px}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Controle de Embarcações</h1><small>Frota Náutica • CBMRN</small></div>
+ <div class="actions"><button id="themeBtn" class="secondary" title="Tema">🌙</button><button id="installBtn" class="secondary">Instalar</button></div>
+</header>
+
+<main>
+<section id="dashboard" class="panel active">
+ <div class="card">
+  <div class="sectionTitle"><div><h2>Hoje</h2><div id="todayLabel" class="muted"></div></div><button id="newUsageTop" class="primary">+ Registrar uso</button></div>
+  <div class="grid">
+   <div class="metric"><span>Disponíveis</span><strong id="mAvailable">0</strong></div>
+   <div class="metric"><span>Em uso</span><strong id="mInUse">0</strong></div>
+   <div class="metric"><span>Manutenção / indisponíveis</span><strong id="mUnavailable">0</strong></div>
+   <div class="metric"><span>Combustível lançado hoje</span><strong id="mFuel">0 L</strong></div>
+  </div>
+ </div>
+ <div class="card"><h3>Disponibilidade de hoje</h3><div id="todayVessels"></div></div>
+ <div class="card"><h3>Atividades de hoje</h3><div id="todayTimeline"></div></div>
+</section>
+
+<section id="vessels" class="panel">
+ <div class="card sectionTitle"><div><h3>Embarcações</h3><div class="muted">Cadastro, status, combustível e condição.</div></div><button id="newVessel" class="primary">+ Embarcação</button></div>
+ <div id="vesselList"></div>
+</section>
+
+<section id="calendar" class="panel">
+ <div class="card">
+  <h3>Disponibilidade por dia</h3>
+  <div class="grid"><label>Data<input id="calendarDate" type="date"></label><label>Filtrar status<select id="calendarStatus"><option value="">Todos</option><option value="available">Disponível</option><option value="inuse">Em uso</option><option value="maintenance">Manutenção</option><option value="unavailable">Indisponível</option></select></label></div>
+ </div>
+ <div id="calendarList"></div>
+</section>
+
+<section id="logs" class="panel">
+ <div class="card sectionTitle"><div><h3>Registros</h3><div class="muted">Uso, abastecimento, limpeza, manutenção e avarias.</div></div><button id="newLog" class="primary">+ Registro</button></div>
+ <div class="card"><div class="grid"><label>Tipo<select id="logFilter"><option value="">Todos</option><option value="usage">Uso / saída</option><option value="fuel">Combustível</option><option value="cleaning">Limpeza</option><option value="maintenance">Manutenção</option><option value="damage">Avaria</option><option value="inspection">Inspeção</option></select></label><label>Embarcação<select id="logVesselFilter"></select></label></div></div>
+ <div id="logList"></div>
+</section>
+
+<section id="more" class="panel">
+ <div class="card"><h3>Dados e backup</h3><p class="muted">Os dados ficam salvos neste aparelho via IndexedDB.</p><div class="actions"><button id="exportBtn" class="secondary">Exportar backup</button><button id="importBtn" class="secondary">Importar backup</button><input id="importFile" type="file" accept=".json,application/json" hidden></div></div>
+ <div class="card"><h3>Sugestões de uso</h3><div class="row"><span>Inspeção pré-uso</span><strong>Motor, casco, equipamentos</strong></div><div class="row"><span>Inspeção pós-uso</span><strong>Avarias e limpeza</strong></div><div class="row"><span>Controle de combustível</span><strong>Litros, horímetro e responsável</strong></div><div class="row"><span>Manutenção preventiva</span><strong>Próxima revisão</strong></div></div>
+</section>
+</main>
+
+<nav class="bottom">
+ <button class="active" data-nav="dashboard"><span>⌂</span>Hoje</button>
+ <button data-nav="vessels"><span>🚤</span>Frota</button>
+ <button data-nav="calendar"><span>📅</span>Agenda</button>
+ <button data-nav="logs"><span>📝</span>Registros</button>
+ <button data-nav="more"><span>⋯</span>Mais</button>
+</nav>
+
+<dialog id="vesselDialog"><form id="vesselForm">
+ <div class="dhead"><div><h3 id="vesselDialogTitle">Nova embarcação</h3><div class="muted">Cadastre os dados principais.</div></div><button type="button" class="secondary" onclick="closeDialog('vesselDialog')">X</button></div>
+ <div class="dbody"><input id="vesselId" type="hidden"><div class="grid">
+  <label>Nome / identificação<input id="vesselName" required placeholder="Ex.: M-01 / Jet 01"></label>
+  <label>Tipo<select id="vesselType"><option>Lancha</option><option>Jet ski</option><option>Bote</option><option>Embarcação inflável</option><option>Outro</option></select></label>
+  <label>Prefixo / patrimônio<input id="vesselPrefix"></label>
+  <label>Status<select id="vesselStatus"><option value="available">Disponível</option><option value="inuse">Em uso</option><option value="maintenance">Manutenção</option><option value="unavailable">Indisponível</option></select></label>
+  <label>Combustível atual (L)<input id="vesselFuel" inputmode="decimal"></label>
+  <label>Horímetro (h)<input id="vesselHours" inputmode="decimal"></label>
+  <label>Próxima revisão<input id="vesselNextMaintenance" type="date"></label>
+  <label>Base / local<input id="vesselBase" placeholder="Ex.: Natal / Pirangi"></label>
+ </div><label style="margin-top:8px">Observações<textarea id="vesselNotes" rows="2"></textarea></label></div>
+ <div class="dactions"><button type="button" class="secondary" onclick="closeDialog('vesselDialog')">Cancelar</button><button class="primary">Salvar</button></div>
+</form></dialog>
+
+<dialog id="logDialog"><form id="logForm">
+ <div class="dhead"><div><h3>Novo registro</h3><div class="muted">Uso, combustível, limpeza, manutenção ou avaria.</div></div><button type="button" class="secondary" onclick="closeDialog('logDialog')">X</button></div>
+ <div class="dbody"><input id="logId" type="hidden"><div class="grid">
+  <label>Embarcação<select id="logVessel" required></select></label>
+  <label>Tipo<select id="logType"><option value="usage">Uso / saída</option><option value="fuel">Combustível</option><option value="cleaning">Limpeza</option><option value="maintenance">Manutenção</option><option value="damage">Avaria</option><option value="inspection">Inspeção</option></select></label>
+  <label>Data e hora<input id="logDate" type="datetime-local" required></label>
+  <label>Responsável<input id="logResponsible" placeholder="Nome / guarnição"></label>
+  <label id="fuelLitersWrap">Litros abastecidos<input id="logFuelLiters" inputmode="decimal"></label>
+  <label id="fuelValueWrap">Valor do abastecimento<input id="logFuelValue" inputmode="decimal"></label>
+  <label>Horímetro após registro<input id="logHours" inputmode="decimal"></label>
+  <label>Status após registro<select id="logAfterStatus"><option value="">Manter atual</option><option value="available">Disponível</option><option value="inuse">Em uso</option><option value="maintenance">Manutenção</option><option value="unavailable">Indisponível</option></select></label>
+ </div>
+ <label style="margin-top:8px">O que foi feito / observações<textarea id="logNotes" rows="3" placeholder="Ex.: patrulhamento, ocorrência, lavagem completa, troca de óleo, avaria encontrada..."></textarea></label>
+ </div>
+ <div class="dactions"><button type="button" class="secondary" onclick="closeDialog('logDialog')">Cancelar</button><button class="primary">Salvar registro</button></div>
+</form></dialog>
+
+<script>
+(async()=>{
+"use strict";
+const $=id=>document.getElementById(id), uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const n=v=>{let x=String(v??"").trim().replace(/[^\d,.-]/g,"");if(x.includes(","))x=x.replace(/\./g,"").replace(",",".");let z=Number(x);return Number.isFinite(z)?z:0};
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+const statusLabel=s=>({available:"Disponível",inuse:"Em uso",maintenance:"Manutenção",unavailable:"Indisponível"}[s]||s);
+const typeLabel=t=>({usage:"Uso / saída",fuel:"Combustível",cleaning:"Limpeza",maintenance:"Manutenção",damage:"Avaria",inspection:"Inspeção"}[t]||t);
+const localKey=v=>{let d=v instanceof Date?v:new Date(v);return Number.isNaN(d.getTime())?"":`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+
+let S={vessels:[],logs:[],settings:{}};
+
+const DB_NAME="ControleEmbarcacoesDB",DB_VERSION=1,STORE="app",STATE_KEY="state";let dbPromise=null,saveQueue=Promise.resolve();
+function openDB(){if(dbPromise)return dbPromise;dbPromise=new Promise((res,rej)=>{let r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return dbPromise}
+async function dbGet(){let db=await openDB();return await new Promise((res,rej)=>{let tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).get(STATE_KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)})}
+async function dbPut(state){let db=await openDB();return await new Promise((res,rej)=>{let tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(state,STATE_KEY);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)})}
+function normalize(x){x=x||{};return{vessels:Array.isArray(x.vessels)?x.vessels:[],logs:Array.isArray(x.logs)?x.logs:[],settings:x.settings||{}}}
+async function load(){try{let x=await dbGet();if(x)S=normalize(x)}catch(e){console.error(e);alert("Não foi possível abrir o banco local do aplicativo.")}}
+function save(){let next=normalize(S);S=next;render();saveQueue=saveQueue.then(()=>dbPut(next)).catch(e=>{console.error(e);alert("Não foi possível salvar os dados.");throw e});return true}
+
+window.closeDialog=id=>$(id).close();
+
+function nav(id){document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===id));window.scrollTo(0,0)}
+document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>nav(b.dataset.nav));
+
+function vesselOptions(selected=""){return '<option value="">Selecione</option>'+S.vessels.map(v=>`<option value="${v.id}" ${v.id===selected?"selected":""}>${esc(v.name)}</option>`).join("")}
+function vesselBy(id){return S.vessels.find(v=>v.id===id)}
+
+function renderDashboard(){
+ let today=localKey(new Date()),todayLogs=S.logs.filter(l=>localKey(l.date)===today),available=S.vessels.filter(v=>v.status==="available").length,inuse=S.vessels.filter(v=>v.status==="inuse").length,unavailable=S.vessels.length-available-inuse,fuel=todayLogs.filter(l=>l.type==="fuel").reduce((s,l)=>s+Number(l.fuelLiters||0),0);
+ $("todayLabel").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+ $("mAvailable").textContent=available;$("mInUse").textContent=inuse;$("mUnavailable").textContent=unavailable;$("mFuel").textContent=fuel.toLocaleString("pt-BR",{maximumFractionDigits:1})+" L";
+ $("todayVessels").innerHTML=S.vessels.length?S.vessels.map(v=>`<div class="row"><div><strong>${esc(v.name)}</strong><div class="muted">${esc(v.type||"")} ${v.base?"• "+esc(v.base):""}</div></div><span class="badge ${v.status}">${statusLabel(v.status)}</span></div>`).join(""):'<div class="empty">Nenhuma embarcação cadastrada.</div>';
+ let sorted=[...todayLogs].sort((a,b)=>b.date.localeCompare(a.date));
+ $("todayTimeline").innerHTML=sorted.length?sorted.map(l=>{let v=vesselBy(l.vesselId);return`<div class="timeline"><div class="timelineItem"><strong>${new Date(l.date).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})} • ${esc(typeLabel(l.type))}</strong><span>${esc(v?.name||"Embarcação removida")}${l.responsible?" • "+esc(l.responsible):""}</span>${l.notes?`<div class="muted">${esc(l.notes)}</div>`:""}</div></div>`}).join(""):'<div class="empty">Nenhuma atividade registrada hoje.</div>'
+}
+function renderVessels(){
+ $("vesselList").innerHTML=S.vessels.length?S.vessels.map(v=>`<details class="vessel"><summary><div><strong>${esc(v.name)}</strong><div class="muted">${esc(v.type||"")} ${v.prefix?"• "+esc(v.prefix):""}</div></div><span class="badge ${v.status}">${statusLabel(v.status)}</span></summary><div class="vesselBody"><div class="grid"><div><span class="muted">Combustível</span><strong>${Number(v.fuel||0).toLocaleString("pt-BR")} L</strong></div><div><span class="muted">Horímetro</span><strong>${Number(v.hours||0).toLocaleString("pt-BR")} h</strong></div><div><span class="muted">Base</span><strong>${esc(v.base||"—")}</strong></div><div><span class="muted">Próxima revisão</span><strong>${v.nextMaintenance?new Date(v.nextMaintenance+"T12:00").toLocaleDateString("pt-BR"):"—"}</strong></div></div>${v.notes?`<p class="muted" style="margin-top:8px">${esc(v.notes)}</p>`:""}<div class="actions" style="margin-top:9px"><button class="primary" onclick="openLog('${v.id}','usage')">Registrar uso</button><button class="secondary" onclick="openLog('${v.id}','fuel')">Combustível</button><button class="secondary" onclick="editVessel('${v.id}')">Editar</button><button class="danger" onclick="deleteVessel('${v.id}')">Excluir</button></div></div></details>`).join(""):'<div class="card empty">Nenhuma embarcação cadastrada.</div>';
+}
+function renderCalendar(){
+ let date=$("calendarDate").value||localKey(new Date()),status=$("calendarStatus").value;let rows=S.vessels.filter(v=>!status||v.status===status);
+ $("calendarList").innerHTML=`<div class="card"><div class="calendarDay"><div class="date">${new Date(date+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"})}</div><div class="calendarList">${rows.length?rows.map(v=>`<div class="row"><span>${esc(v.name)}</span><span class="badge ${v.status}">${statusLabel(v.status)}</span></div>`).join(""):'<div class="empty">Nenhuma embarcação neste filtro.</div>'}</div></div></div>`
+}
+function renderLogs(){
+ $("logVesselFilter").innerHTML='<option value="">Todas</option>'+S.vessels.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join("");
+ let type=$("logFilter").value,vid=$("logVesselFilter").value,rows=[...S.logs].filter(l=>(!type||l.type===type)&&(!vid||l.vesselId===vid)).sort((a,b)=>b.date.localeCompare(a.date));
+ $("logList").innerHTML=rows.length?rows.map(l=>{let v=vesselBy(l.vesselId);return`<div class="card"><div class="row"><div><strong>${esc(typeLabel(l.type))}</strong><div class="muted">${new Date(l.date).toLocaleString("pt-BR")} • ${esc(v?.name||"Embarcação removida")}</div></div><button class="danger" onclick="deleteLog('${l.id}')">Excluir</button></div>${l.responsible?`<p><strong>Responsável:</strong> ${esc(l.responsible)}</p>`:""}${l.type==="fuel"?`<p><strong>Combustível:</strong> ${Number(l.fuelLiters||0).toLocaleString("pt-BR")} L ${l.fuelValue?`• R$ ${Number(l.fuelValue).toLocaleString("pt-BR",{minimumFractionDigits:2})}`:""}</p>`:""}${l.notes?`<p class="muted">${esc(l.notes)}</p>`:""}</div>`}).join(""):'<div class="card empty">Nenhum registro encontrado.</div>'
+}
+function render(){renderDashboard();renderVessels();renderCalendar();renderLogs()}
+
+function openVessel(v=null){$("vesselForm").reset();$("vesselId").value=v?.id||"";$("vesselDialogTitle").textContent=v?"Editar embarcação":"Nova embarcação";$("vesselName").value=v?.name||"";$("vesselType").value=v?.type||"Lancha";$("vesselPrefix").value=v?.prefix||"";$("vesselStatus").value=v?.status||"available";$("vesselFuel").value=v?.fuel??"";$("vesselHours").value=v?.hours??"";$("vesselNextMaintenance").value=v?.nextMaintenance||"";$("vesselBase").value=v?.base||"";$("vesselNotes").value=v?.notes||"";$("vesselDialog").showModal()}
+window.editVessel=id=>openVessel(vesselBy(id));
+window.deleteVessel=id=>{if(!confirm("Excluir esta embarcação? Os registros históricos serão mantidos."))return;S.vessels=S.vessels.filter(v=>v.id!==id);save()}
+$("newVessel").onclick=()=>openVessel();
+$("vesselForm").onsubmit=e=>{e.preventDefault();let id=$("vesselId").value,now=new Date().toISOString(),data={id:id||uid(),name:$("vesselName").value.trim(),type:$("vesselType").value,prefix:$("vesselPrefix").value.trim(),status:$("vesselStatus").value,fuel:n($("vesselFuel").value),hours:n($("vesselHours").value),nextMaintenance:$("vesselNextMaintenance").value,base:$("vesselBase").value.trim(),notes:$("vesselNotes").value.trim(),updated:now};if(!data.name)return;let old=vesselBy(id);if(old)Object.assign(old,data);else S.vessels.push({...data,created:now});save();$("vesselDialog").close()}
+
+function setLogFields(){let fuel=$("logType").value==="fuel";$("fuelLitersWrap").style.display=fuel?"block":"none";$("fuelValueWrap").style.display=fuel?"block":"none"}
+window.openLog=(vid="",type="usage")=>{if(!S.vessels.length)return alert("Cadastre uma embarcação primeiro.");$("logForm").reset();$("logId").value="";$("logVessel").innerHTML=vesselOptions(vid||S.vessels[0].id);$("logVessel").value=vid||S.vessels[0].id;$("logType").value=type;$("logDate").value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);setLogFields();$("logDialog").showModal()}
+$("newLog").onclick=()=>openLog();$("newUsageTop").onclick=()=>openLog("","usage");$("logType").onchange=setLogFields;
+$("logForm").onsubmit=e=>{e.preventDefault();let v=vesselBy($("logVessel").value);if(!v)return alert("Selecione uma embarcação.");let l={id:uid(),vesselId:v.id,type:$("logType").value,date:$("logDate").value,responsible:$("logResponsible").value.trim(),fuelLiters:n($("logFuelLiters").value),fuelValue:n($("logFuelValue").value),hours:n($("logHours").value),afterStatus:$("logAfterStatus").value,notes:$("logNotes").value.trim(),created:new Date().toISOString()};S.logs.unshift(l);if(l.type==="fuel"&&l.fuelLiters)v.fuel=Number(v.fuel||0)+l.fuelLiters;if(l.hours>0)v.hours=l.hours;if(l.afterStatus)v.status=l.afterStatus;save();$("logDialog").close()}
+window.deleteLog=id=>{if(!confirm("Excluir este registro?"))return;S.logs=S.logs.filter(l=>l.id!==id);save()}
+
+$("calendarDate").value=localKey(new Date());$("calendarDate").onchange=renderCalendar;$("calendarStatus").onchange=renderCalendar;$("logFilter").onchange=renderLogs;$("logVesselFilter").onchange=renderLogs;
+
+$("themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("boatTheme",document.body.classList.contains("dark")?"dark":"light");$("themeBtn").textContent=document.body.classList.contains("dark")?"☀️":"🌙"};
+if(localStorage.getItem("boatTheme")==="dark"){document.body.classList.add("dark");$("themeBtn").textContent="☀️"}
+
+$("exportBtn").onclick=()=>{let blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="backup-controle-embarcacoes.json";a.click();URL.revokeObjectURL(url)}
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=function(){let file=this.files?.[0];if(!file)return;let r=new FileReader();r.onload=async()=>{try{let x=normalize(JSON.parse(String(r.result||"")));S=x;await dbPut(S);render();alert("Backup importado com sucesso.")}catch(e){console.error(e);alert("Não foi possível importar este backup.")}finally{$("importFile").value=""}};r.readAsText(file,"UTF-8")}
+
+let deferred=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e});$("installBtn").onclick=async()=>{if(deferred){deferred.prompt();await deferred.userChoice;deferred=null}else alert("No celular, use a opção do navegador “Adicionar à tela inicial” se o botão de instalação não aparecer.")};
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
+
+await load();render();
+})();
+</script>
+</body>
+</html>
